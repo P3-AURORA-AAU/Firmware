@@ -1,0 +1,72 @@
+const std = @import("std");
+const os = std.posix; // updated — `std.os` is now split; use std.posix for syscalls
+
+const syn: u8 = 0x53;
+const synAck: u8 = 0x54;
+const ack: u8 = 0x55;
+
+const UARTError = error{
+    Timeout,
+    UnexpectedResponse,
+    IoError,
+};
+
+pub fn main() !void {
+    const stdout = std.fs.File.stdout().writer(&.{});
+
+    const uart_path = "/dev/ttyAMA0";
+    const fd = try os.open(uart_path, .{}, 0o666);
+    defer os.close(fd);
+
+    var tio: os.termios = try os.tcgetattr(fd);
+
+    const baudRate = os.B9600;
+    try os.cfsetispeed(&tio, baudRate);
+    try os.cfsetospeed(&tio, baudRate);
+
+    tio.c_iflag = 0;
+    tio.c_oflag = 0;
+    tio.c_lflag = 0;
+    tio.c_cflag = os.CS8 | os.CREAD | os.CLOCAL; // 8-N-1
+
+    try os.tcsetattr(fd, .now, &tio);
+
+    const ok = try handshake(fd, 2_000_000); // timeout = 2 seconds (µs)
+    if (ok) {
+        try stdout.print("Handshake successful!\n", .{});
+    } else {
+        try stdout.print("Handshake failed.\n", .{});
+    }
+}
+
+fn writeByte(fd: os.fd_t, b: u8) UARTError!void {
+    const n = os.write(fd, &b) catch return UARTError.IoError;
+    if (n != 1) return UARTError.IoError;
+}
+
+fn readByte(fd: os.fd_t, timeout_us: i64) UARTError!u8 {
+    var poll_fds = [_]os.pollfd{
+        .{ .fd = fd, .events = os.POLL.IN, .revents = 0 },
+    };
+
+    const nready = os.poll(&poll_fds, timeout_us / 1000) catch return UARTError.IoError;
+    if (nready == 0) return UARTError.Timeout;
+
+    var buf: [1]u8 = undefined;
+    const n = os.read(fd, &buf) catch return UARTError.IoError;
+    if (n != 1) return UARTError.IoError;
+
+    return buf[0];
+}
+
+fn handshake(fd: os.fd_t, timeout_us: i64) UARTError!bool {
+    try writeByte(fd, syn);
+
+    const resp = try readByte(fd, timeout_us);
+    if (resp != synAck) {
+        return UARTError.UnexpectedResponse;
+    }
+
+    try writeByte(fd, ack);
+    return true;
+}
