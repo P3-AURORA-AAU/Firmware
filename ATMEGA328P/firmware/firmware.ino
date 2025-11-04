@@ -50,7 +50,8 @@ bool performHandshake() {
     if (millis() - startTime >= timeoutMs) { return false; }
     int recieved = uart.read();
     if (recieved == -1) {continue;}
-    if (recieved == ack) { return false; }
+    Serial.println(recieved);
+    if (recieved != ack) { return false; }
     return true;
   }
   return false;
