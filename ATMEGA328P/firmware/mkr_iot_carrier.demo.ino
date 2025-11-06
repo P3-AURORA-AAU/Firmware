@@ -9,7 +9,9 @@ float gy_x, gy_y, gy_z;
 void setup() {
   carrier.noCase();
   carrier.begin();
-
+  
+  carrier.Relay1.open();
+  carrier.Relay2.open();
 
   Serial.begin(9600);
 
