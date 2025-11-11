@@ -54,7 +54,7 @@ void loop() {
   }
 }
 
-[floats] sensorRequset([byte] cmd){
+void sensorRequset([byte] cmd){
 switch (cmd[1]) {
     case 0x01:
       accData();
