@@ -48,12 +48,36 @@ void loop() {
       setSpeed(cmd);
       break;
     case 0x62:
+      setDir(cmd);
       break;
     case 0x63:
       sensorRequset(cmd);
     break;
   }
 }
+void setDir([byte] cmd){
+  int angle = cmd[1];
+  switch (angle) {
+    case 0: // sebastians problem
+      ;
+      break;
+    case 360:// sebastians problem
+    ;
+      break;
+
+    default:
+      break;
+
+  }
+
+  if angle > 130{ super }
+  else if angle > 50 u < 130 { fast }
+  else if speed 0 { medium }
+  else { slow }
+}
+
+
+
 
 void sensorRequset([byte] cmd){
 switch (cmd[1]) {
@@ -146,4 +170,3 @@ void gyroData() {
       uart.write(gy_x);
     }
 }
-
