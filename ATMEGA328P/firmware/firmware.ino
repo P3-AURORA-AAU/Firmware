@@ -1,4 +1,5 @@
 #include <SoftwareSerial.h>
+#include <Arduino_MKRIoTCarrier.h>
 
 
 MKRIoTCarrier carrier;
