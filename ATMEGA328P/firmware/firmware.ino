@@ -1,4 +1,7 @@
-#include "Arduino.h"
+void turn(Speed speed) {
+  MotorSpeed.Left = speed.Left;
+  MotorSpeed.Right = speed.Right;
+}#include "Arduino.h"
 #include <Arduino_MKRIoTCarrier.h>
 
 const int UART_MAX_LENTH = 12;
@@ -98,14 +101,9 @@ void loop() {
   ParseMotor();
 }
 
-void turn(Speed speed, bool inverse = false) {
-  if (!inverse) {
-    MotorSpeed.Left = speed.Left;
-    MotorSpeed.Right = speed.Right;
-  } else {
-    MotorSpeed.Right = speed.Left;
-    MotorSpeed.Left = speed.Right;
-  }
+void turn(Speed speed) {
+  MotorSpeed.Left = speed.Left;
+  MotorSpeed.Right = speed.Right;
 }
 
 void setDir(byte* cmd) {
