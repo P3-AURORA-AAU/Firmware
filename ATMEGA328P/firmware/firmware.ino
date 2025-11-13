@@ -49,13 +49,6 @@ const Speed MEDIUM = {100, 0};
 const Speed FAST   = {100, -50};
 const Speed SUPER  = {100, -100};
 
-
-enum StanderdSpeed {
-  FullSpeed = 100,
-  HalfSpeed = 50,
-  NoMovment = 0,
-};
-
 Speed MotorSpeed = {0,0};
 
 void setup(){
