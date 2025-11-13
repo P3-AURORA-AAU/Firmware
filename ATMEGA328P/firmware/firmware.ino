@@ -35,7 +35,7 @@ const int RELAY3 = 16;
 const int RELAY4 = 17;
 
 //mkr iot carrier relays 
-const int DPDT_RIGTH = 18;
+const int DPDT_RIGHT = 18;
 const int DPDT_LEFT = 19; 
 
 
@@ -60,7 +60,7 @@ void setup(){
   pinMode(RELAY3, OUTPUT);
   pinMode(RELAY4, OUTPUT);
   pinMode(DPDT_LEFT, OUTPUT);
-  pinMode(DPDT_RIGTH, OUTPUT);
+  pinMode(DPDT_RIGHT, OUTPUT);
   
   carrier.Relay1.open();
   carrier.Relay2.open();
@@ -226,8 +226,8 @@ int readUart(byte* buffer, int maxLen) {
  
 
 void ParseMotor() {
-  int left = MotorSpeed.Left
-  int right = MotorSpeed.Right
+  int left = MotorSpeed.Left;
+  int right = MotorSpeed.Right;
 
   switch ( left ) {
     case 100:
@@ -262,7 +262,7 @@ void ParseMotor() {
       digitalWrite(RELAY2, LOW);
       break;
     case 50:
-    digitalWrite(DPDT_RIGTH, LOW);
+    digitalWrite(DPDT_RIGHT, LOW);
     digitalWrite(RELAY1, HIGH);
     digitalWrite(RELAY2, LOW);
       break;
