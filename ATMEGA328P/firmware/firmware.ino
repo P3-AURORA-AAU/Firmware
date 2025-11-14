@@ -1,7 +1,4 @@
-void turn(Speed speed) {
-  MotorSpeed.Left = speed.Left;
-  MotorSpeed.Right = speed.Right;
-}#include "Arduino.h"
+#include "Arduino.h"
 #include <Arduino_MKRIoTCarrier.h>
 
 const int UART_MAX_LENTH = 12;
