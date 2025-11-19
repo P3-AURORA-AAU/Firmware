@@ -8,8 +8,8 @@ MKRIoTCarrier carrier;
 float acc_x, acc_y, acc_z;
 float gy_x, gy_y, gy_z;
 
-constexpr uint8_t PIN_RX = 1;
-constexpr uint8_t PIN_TX = 2;
+constexpr uint8_t PIN_RX = 13;
+constexpr uint8_t PIN_TX = 14;
 
 const uint8_t syn = 0x53;
 const uint8_t synAck = 0x54;
