@@ -1,4 +1,3 @@
-#include "Arduino.h"
 #include <Arduino_MKRIoTCarrier.h>
 
 const int UART_MAX_LENTH = 12;
@@ -8,15 +7,13 @@ MKRIoTCarrier carrier;
 float acc_x, acc_y, acc_z;
 float gy_x, gy_y, gy_z;
 
-constexpr uint8_t PIN_RX = 13;
-constexpr uint8_t PIN_TX = 14;
+
+constexpr uint8_t PIN_RESET = 4;
 
 const uint8_t syn = 0x53;
 const uint8_t synAck = 0x54;
 const uint8_t ack = 0x55;
 
-
-Uart uart(&sercom2, PIN_RX, PIN_TX, SERCOM_RX_PAD_3, UART_TX_PAD_2);
 
 byte cmd[UART_MAX_LENTH];
 
@@ -48,7 +45,15 @@ const Speed SUPER  = {100, -100};
 
 Speed MotorSpeed = {0,0};
 
+void SERCOM2_Handler()
+{
+  uart.IrqHandler();
+}
+
 void setup(){
+  pinPeripheral(PIN_RX, PIO_SERCOM_ALT);
+  pinPeripheral(PIN_TX, PIO_SERCOM_ALT);
+
   carrier.noCase();
   carrier.begin();
 
@@ -67,16 +72,13 @@ void setup(){
 
   bool handshakeDone = performHandshake();
   if (!handshakeDone) {
-    Serial.println("Handshake failed");
     return;
   }
-  Serial.println("Handshake succeeded");
 }
 
 void loop() {
   int count = readUart(cmd, UART_MAX_LENTH);
-  Serial.print("cmd byte lenth: ");
-  Serial.println(count);
+
   switch (cmd[0]) {
     case 0x61:
       setSpeed(cmd);
@@ -165,7 +167,6 @@ void setSpeed (byte* cmd) {
 bool performHandshake() {
 
   bool handshakeInitialised = false;
-  Serial.println("Awaiting handshake init...");
 
   while (handshakeInitialised == false) {
     int recieved = uart.read();
@@ -174,18 +175,17 @@ bool performHandshake() {
     handshakeInitialised = true;
   }
 
-  Serial.println("Sync recieved, acknowledging");
-  uart.write(synAck);
+
+  Serial.write(synAck);
 
   const unsigned long timeoutMs = 5000UL;
   unsigned long startTime = millis();
 
-  Serial.println("Awaiting Acknowledgement");
+
   while (true) {
     if (millis() - startTime >= timeoutMs) { return false; }
     int recieved = uart.read();
     if (recieved == -1) {continue;}
-    Serial.println(recieved);
     if (recieved != ack) { return false; }
     return true;
   }
@@ -200,7 +200,7 @@ void accData() {
   if (carrier.IMUmodule.accelerationAvailable())
     {
       carrier.IMUmodule.readAcceleration(acc_x, acc_y, acc_z);
-      uart.write(acc_x);
+      Serial.write(acc_x);
     }
 }
 
@@ -208,14 +208,14 @@ void gyroData() {
   if (carrier.IMUmodule.gyroscopeAvailable())
     {
       carrier.IMUmodule.readGyroscope(gy_x, gy_y, gy_z);
-      uart.write(gy_x);
+      Serial.write(gy_x);
     }
 }
 
 int readUart(byte* buffer, int maxLen) {
     int count = 0;
-    while (uart.available() && count < maxLen) {
-        int b = uart.read();
+    while (Serial.available() && count < maxLen) {
+        int b = Serial.read();
         if (b != -1) buffer[count++] = (byte)b;
     }
     return count; // number of bytes read
