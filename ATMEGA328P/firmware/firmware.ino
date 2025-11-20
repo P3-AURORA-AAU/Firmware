@@ -2,6 +2,8 @@
 
 const int UART_MAX_LENTH = 12;
 
+bool handshakeDone = false;
+
 MKRIoTCarrier carrier;
 
 float acc_x, acc_y, acc_z;
@@ -58,21 +60,25 @@ void setup(){
   pinMode(RELAY4, OUTPUT);
   pinMode(DPDT_LEFT, OUTPUT);
   pinMode(DPDT_RIGHT, OUTPUT);
+
+  pinMode(PIN_RESET, INPUT);
   
   carrier.Relay1.open();
   carrier.Relay2.open();
 
   Serial.begin(9600); //Initializes USB serial port for debugging purposes
 
-  bool handshakeDone = performHandshake();
+  handshakeDone = performHandshake();
   if (!handshakeDone) {
     return;
   }
 }
 
 void loop() {
-  int count = readUart(cmd, UART_MAX_LENTH);
-
+  if (digitalRead(PIN_RESET) == HIGH) {
+    handshakeDone = false;
+  }
+  while (handshakeDone){
   switch (cmd[0]) {
     case 0x61:
       setSpeed(cmd);
@@ -85,6 +91,7 @@ void loop() {
     break;
   }
   ParseMotor();
+  }
 }
 
 void turn(Speed speed) {
@@ -92,14 +99,20 @@ void turn(Speed speed) {
   MotorSpeed.Right = speed.Right;
 }
 
+void BackwordsTurn(Speed speed) {
+  MotorSpeed.Left = -speed.Left;
+  MotorSpeed.Right = -speed.Right;
+}
+
 void setDir(byte* cmd) {
   int angle = cmd[1];
   switch (angle) {
-    case 0: // sebastians problem
+    case 0x01:
       ;
       break;
-    case 360:// sebastians problem
-    ;
+    case 0xFF:
+    MotorSpeed.Left = -MotorSpeed.Left ;
+    MotorSpeed.Right = -MotorSpeed.Right;
       break;
 
     default:
@@ -111,6 +124,11 @@ void setDir(byte* cmd) {
   else if (angle > 50 && angle  < 130) { turn(FAST); }
   else if (MotorSpeed.Left == 0) { turn(MEDIUM); }
   else { turn(SLOW); }
+
+  if (angle < -130) { BackwordsTurn(SUPER); }
+  else if (angle < -50 && angle  > -130) { BackwordsTurn(FAST); }
+  else if (MotorSpeed.Left == 0) { BackwordsTurn(MEDIUM); }
+  else { BackwordsTurn(SLOW); }
 }
 
 void sensorRequset(byte* cmd){
