@@ -45,14 +45,9 @@ const Speed SUPER  = {100, -100};
 
 Speed MotorSpeed = {0,0};
 
-void SERCOM2_Handler()
-{
-  uart.IrqHandler();
-}
 
 void setup(){
-  pinPeripheral(PIN_RX, PIO_SERCOM_ALT);
-  pinPeripheral(PIN_TX, PIO_SERCOM_ALT);
+
 
   carrier.noCase();
   carrier.begin();
@@ -68,7 +63,6 @@ void setup(){
   carrier.Relay2.open();
 
   Serial.begin(9600); //Initializes USB serial port for debugging purposes
-  uart.begin(9600); //Initializes UART com (1, 2)
 
   bool handshakeDone = performHandshake();
   if (!handshakeDone) {
