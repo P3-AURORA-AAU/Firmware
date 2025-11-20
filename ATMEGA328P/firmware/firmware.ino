@@ -163,7 +163,7 @@ bool performHandshake() {
   bool handshakeInitialised = false;
 
   while (handshakeInitialised == false) {
-    int recieved = uart.read();
+    int recieved = Serial.read();
     if (recieved == -1) {continue;}
     if (recieved != syn) {return false;}
     handshakeInitialised = true;
@@ -178,7 +178,7 @@ bool performHandshake() {
 
   while (true) {
     if (millis() - startTime >= timeoutMs) { return false; }
-    int recieved = uart.read();
+    int recieved = Serial.read();
     if (recieved == -1) {continue;}
     if (recieved != ack) { return false; }
     return true;
@@ -187,9 +187,9 @@ bool performHandshake() {
 }
 
 
-void MoistMeterData() {uart.write(carrier.Env.readHumidity());}
-void tempData() {uart.write(carrier.Env.readTemperature());}
-void pressureData() {uart.write(carrier.Pressure.readPressure());}
+void MoistMeterData() {Serial.write(carrier.Env.readHumidity());}
+void tempData() {Serial.write(carrier.Env.readTemperature());}
+void pressureData() {Serial.write(carrier.Pressure.readPressure());}
 void accData() {
   if (carrier.IMUmodule.accelerationAvailable())
     {
