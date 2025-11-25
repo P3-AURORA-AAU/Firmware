@@ -53,34 +53,30 @@ def start_ffmpeg(
 # Async generator: split the raw MJPEG stream into individual JPEG frames
 # ----------------------------------------------------------------------
 async def mjpeg_frame_generator(proc: subprocess.Popen) -> AsyncGenerator[bytes, None]:
-    """
-    Reads the stdout of the FFmpeg process and yields each JPEG frame.
-    MJPEG frames are delimited by the JPEG SOI (0xFFD8) and EOI (0xFFD9) markers.
-    """
     buffer = b""
 
     while True:
-        # Read a chunk – 4096 bytes is a reasonable size.
         chunk = await asyncio.to_thread(proc.stdout.read, 4096)
         if not chunk:
-            # EOF – FFmpeg terminated unexpectedly.
             break
 
         buffer += chunk
 
-        # Extract all complete JPEGs from the buffer.
         while True:
             start = buffer.find(b"\xff\xd8")  # SOI
-            end = buffer.find(b"\xff\xd9")    # EOI
-            if start != -1 and end != -1 and end > start:
-                # Include the EOI marker (+2 bytes).
-                jpeg = buffer[start : end + 2]
-                yield jpeg
-                # Remove the consumed bytes from the buffer.
-                buffer = buffer[end + 2 :]
-            else:
-                # Not enough data for a full frame yet.
+            if start == -1:
                 break
+
+            # critical: find EOI AFTER SOI
+            end = buffer.find(b"\xff\xd9", start + 2)
+            if end == -1:
+                break
+
+            jpeg = buffer[start : end + 2]
+            yield jpeg
+
+            buffer = buffer[end + 2 :]
+
 
 
 # ----------------------------------------------------------------------
