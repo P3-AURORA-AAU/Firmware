@@ -31,9 +31,10 @@ async def recieve(ws: WebSocket):
             stop(data)
 
 async def send(ws: WebSocket):
+    ffmpeg_proc = start_ffmpeg(width=1280, height=720, fps=60, quality=5)
     async for frame in mjpeg_frame_generator(ffmpeg_proc):
         # Send the raw JPEG bytes as a binary WebSocket message
-        ffmpeg_proc = start_ffmpeg(width=1280, height=720, fps=60, quality=5)
+        
 
         await ws.send_json({"type": "camera_data", "data": {"image": base64.b64encode(frame).decode("ascii")}})
     
