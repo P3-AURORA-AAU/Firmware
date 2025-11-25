@@ -162,7 +162,17 @@ async def websocket_endpoint(ws: WebSocket):
         return_when=asyncio.FIRST_COMPLETED,
     )
 
-    # Cancel whatever is still running.
     for task in pending:
         task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    # Log exceptions from finished tasks
+    for task in done:
+        exc = task.exception()
+        if exc:
+            print("[ws] task exception:", exc)
+
     print("[ws] Connection closed")
