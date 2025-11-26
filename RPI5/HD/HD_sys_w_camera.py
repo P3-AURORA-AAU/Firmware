@@ -2,6 +2,7 @@ import asyncio
 import websocket
 import cv2
 import numpy as np
+import json
 
 from ultralytics import YOLO
 
@@ -31,25 +32,26 @@ def bytes_to_cv_image(frame_bytes: bytes) -> np.ndarray:
 async def fetch_one_frame() -> np.ndarray:
     async with websockets.connect(WS_URI) as ws:
         try:
-            # Wait for the next binary message (the frame)
-            frame_bytes = await asyncio.wait_for(ws.recv(), timeout=FRAME_TIMEOUT)
+            msg = await asyncio.wait_for(ws.recv(), timeout=FRAME_TIMEOUT)
 
-            # Some servers may send text messages (e.g., base64). Detect and handle:
-            if isinstance(frame_bytes, str):
-                # Assume base64‑encoded image data
-                import base64
-                frame_bytes = base64.b64decode(frame_bytes)
+            # msg arrives as a JSON string → parse it
+            if isinstance(msg, str):
+                data = json.loads(msg)
 
-            # Decode to an OpenCV image
+                if data.get("type") != "camera_data":
+                    raise RuntimeError("Unexpected message type")
+
+                b64img = data["data"]["image"]
+                frame_bytes = base64.b64decode(b64img)
+
+            else:
+                raise RuntimeError("Expected JSON string from server")
+
             img = bytes_to_cv_image(frame_bytes)
             return img
 
         except asyncio.TimeoutError:
             raise RuntimeError(f"No frame received within {FRAME_TIMEOUT}s.")
-        finally:
-            # The `async with` block automatically closes the socket.
-            pass
-
 # ----------------------------------------------------------------------
 # Example usage – display the captured frame
 # ----------------------------------------------------------------------
