@@ -2,109 +2,91 @@
 import asyncio
 import subprocess
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import cv2
 import base64
 
 app = FastAPI()
 
 @app.websocket("/ws")
 async def main(ws: WebSocket):
-    await ws.access
+    await ws.accept()
     print('[ws] Client Connected')
 
     one = asyncio.create_task(recieve(ws))
     two = asyncio.create_task(send(ws))
 
-    await one
-    await two
+    try:
+        done, pending = await asyncio.wait(
+            [one, two],
+            return_when=asyncio.FIRST_COMPLETED
+        )
+
+        for task in pending:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    except WebSocketDisconnect:
+        print('[ws] Client disconnected')
+    except Exception as e:
+        print(f'[ws] Error: {e}')
+    finally:
+        print('[ws] Done doing stuff')
 
 async def recieve(ws: WebSocket):
-    data = await ws.recieve_json()
+    try:
+        while True:
+            data = await ws.receive_json()
+            print("[ws] Received Data: ", data) # uhm debugging lol
 
-    match data.type:
-        case "move_data":
-            handle_move(data.data)
-        case "speed_data":
-            handle_speed(data.data)
-        # these dont do shit rn lol
-        case "sensor":
-            sensor(data)
-        case "stop":
-            stop(data) # this is just "none" in move data so remove this
-
-async def send(ws: WebSocket):
-    ffmpeg_proc = start_ffmpeg(width=1280, height=720, fps=60, quality=5)
-    async for frame in mjpeg_frame_generator(ffmpeg_proc):
-        # Send the raw JPEG bytes as a binary WebSocket message
-        
-
-        await ws.send_json({"type": "camera_data", "data": {"image": base64.b64encode(frame).decode("ascii")}})
+            match data["type"]:
+                case "move_rover":
+                    handle_move(data["data"])
+                case "change_speed":
+                    handle_speed(data["data"])
+                # these dont do shit rn lol
+                case "sensor":
+                    sensor(data)
+                case "stop":
+                    stop(data) # this is just "none" in move data so remove this
+    except WebSocketDisconnect:
+        print('[ws] Receive task stopped')
+        raise
+    except Exception as e:
+        print(f'[ws] Receive error: {e}')
+        raise
     
 
-async def mjpeg_frame_generator(proc: subprocess.Popen):
-    """
-    Reads the stdout of the FFmpeg process and yields each JPEG frame.
-    MJPEG frames are delimited by the JPEG SOI (0xFFD8) and EOI (0xFFD9) markers.
-    """
-    buffer = b""
-    while True:
-        # Read a chunk – 4096 bytes is a reasonable size
-        chunk = await asyncio.to_thread(proc.stdout.read, 4096)
-        if not chunk:
-            # EOF – FFmpeg terminated unexpectedly
-            break
-        buffer += chunk
+async def send(ws: WebSocket):
+    # waow cv2 instead so we dont have like 50 lines or something for image handling
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
-        # Extract all complete JPEGs from the buffer
+    try:
         while True:
-            start = buffer.find(b"\xff\xd8")  # SOI
-            end = buffer.find(b"\xff\xd9")    # EOI
-            if start != -1 and end != -1 and end > start:
-                # Include the EOI marker (+2 bytes)
-                jpeg = buffer[start : end + 2]
-                yield jpeg
-                # Remove the consumed bytes from the buffer
-                buffer = buffer[end + 2 :]
-            else:
-                # Not enough data for a full frame yet
+            ret, frame = await asyncio.to_thread(cap.read)
+            if not ret:
                 break
 
-def start_ffmpeg(
-    device: str = "/dev/video0",
-    width: int = 640,
-    height: int = 480,
-    fps: int = 60,
-    quality: int = 5,          # 2‑31 (lower = better quality) for MJPEG
-) -> subprocess.Popen:
-    """
-    Returns a Popen object whose stdout yields a raw MJPEG byte stream.
-    """
-    cmd = [
-        "ffmpeg",
-        "-f", "v4l2",                     # input format
-        "-framerate", str(fps),
-        "-video_size", f"{width}x{height}",
-        "-i", device,
-        "-c:v", "mjpeg",                # force MJPEG output
-        "-q:v", str(quality),             # quality (2‑31, 2 = best)
-       "-f", "mjpeg",                    # output container
-        "pipe:1",                          # write to stdout
-    ]
+            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+            jpeg_bytes = buffer.tobytes()
 
-    # Start FFmpeg, pipe only stdout (stderr goes to console for debugging)
-    proc = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        bufsize=0,                      # unbuffered – we want frames ASAP
-    )
-    return proc
+            await ws.send_bytes(jpeg_bytes)
+    finally:
+        cap.release()
 
 
+# TODO: make ts actually do stuff
 def handle_move(data):
     # "forward" | "backwards" | "left" | "right" | "forward_left" | "forward_right" | "backwards_left" | "backwards_right" | "none"
-    print(f"Move: {data.direction}")
+    print(f"Move: {data}")
 
 
 def handle_speed(data):
     # "50%" | "100%"
-    print(f"Speed: {data.speed}")
+    print(f"Speed: {data}")
