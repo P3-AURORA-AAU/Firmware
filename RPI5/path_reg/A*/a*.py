@@ -193,7 +193,7 @@ def main():
     # Define the source and destination
     src = [8, 3]
     dest = [0, 0]
-    objThreshhold = 7
+    objThreshhold = 1
 
     # Run the A* search algorithm
     path = a_star_search(objGrid, src, dest, objThreshhold)
