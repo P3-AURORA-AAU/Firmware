@@ -14,6 +14,7 @@ class Cell:
         self.obj = 1 #cost of the obstacle in front
 
 # Define the size of the grid
+#grid field is 0.6x0.6m, gridsize is to be updated in accordance to CPH ACM (15) 0.090B
 ROW = 9
 COL = 10
 
