@@ -21,14 +21,15 @@ async def recieve(ws: WebSocket):
     data = await ws.recieve_json()
 
     match data.type:
-        case "move":
-            move(data)
-        case "turn":
-            turn(data)
+        case "move_data":
+            handle_move(data.data)
+        case "speed_data":
+            handle_speed(data.data)
+        # these dont do shit rn lol
         case "sensor":
             sensor(data)
         case "stop":
-            stop(data)
+            stop(data) # this is just "none" in move data so remove this
 
 async def send(ws: WebSocket):
     ffmpeg_proc = start_ffmpeg(width=1280, height=720, fps=60, quality=5)
@@ -97,3 +98,13 @@ def start_ffmpeg(
         bufsize=0,                      # unbuffered – we want frames ASAP
     )
     return proc
+
+
+def handle_move(data):
+    # "forward" | "backwards" | "left" | "right" | "forward_left" | "forward_right" | "backwards_left" | "backwards_right" | "none"
+    print(f"Move: {data.direction}")
+
+
+def handle_speed(data):
+    # "50%" | "100%"
+    print(f"Speed: {data.speed}")
