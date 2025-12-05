@@ -175,22 +175,14 @@ def plot(path, objGrid, src, dest):
     plt.gca().invert_yaxis()
     plt.show()
 
+def parse_grid(grid, row_size):
+    return [grid[i:i + row_size] for i in range(0, len(grid), row_size)]
 
 def main():
     # Define the grid (1 for unblocked, 0 for blocked)
 
 
-    objGrid = [
-        [7, 3, 9, 2, 6, 10, 4, 1, 8, 5],
-        [2, 5, 1, 10, 7, 3, 9, 6, 4, 8],
-        [4, 9, 2, 8, 1, 5, 7, 3, 10, 6],
-        [10, 6, 5, 1, 9, 2, 8, 4, 3, 7],
-        [3, 8, 6, 5, 2, 7, 1, 9, 10, 4],
-        [1, 4, 10, 7, 3, 8, 5, 2, 9, 6],
-        [5, 2, 7, 9, 4, 1, 6, 8, 3, 10],
-        [8, 1, 3, 6, 5, 9, 2, 7, 4, 10],
-        [9, 10, 4, 3, 8, 6, 5, 2, 1, 7]
-    ]
+    objGrid = parse_grid(grid, row_size)
 
     # Define the source and destination
     src = [8, 3]
