@@ -57,13 +57,13 @@ async def recieve(ws: WebSocket):
     except Exception as e:
         print(f'[ws] Receive error: {e}')
         raise
-    
+
 
 async def send(ws: WebSocket):
     # waow cv2 instead so we dont have like 50 lines or something for image handling
     cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
     cap.set(cv2.CAP_PROP_FPS, 30)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
