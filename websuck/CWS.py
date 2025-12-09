@@ -1,11 +1,11 @@
 #CentralWebSocket
 import asyncio
-import subprocess
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import cv2
-import base64
 
 app = FastAPI()
+
+send_queue = asyncio.Queue()
 
 @app.websocket("/ws")
 async def main(ws: WebSocket):
@@ -23,17 +23,15 @@ async def main(ws: WebSocket):
 
         for task in pending:
             task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
 
-    except WebSocketDisconnect:
-        print('[ws] Client disconnected')
+        await asyncio.gather(*pending, return_exceptions=True)
+
+
     except Exception as e:
         print(f'[ws] Error: {e}')
     finally:
-        print('[ws] Done doing stuff')
+        print('[ws] Cleaning up')
+
 
 async def recieve(ws: WebSocket):
     try:
@@ -46,11 +44,33 @@ async def recieve(ws: WebSocket):
                     handle_move(data["data"])
                 case "change_speed":
                     handle_speed(data["data"])
+                    # test thing, remove ts
+
+                    await send_queue.put({
+                        "type": "path_data",
+                        "data": {
+                            "grid": [
+                                [0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+                                [0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+                                [1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                                [0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+                                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0],
+                                [0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+                                [1, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+                                [0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0],
+                                [1, 0, 0, 1, 0, 1, 0, 0, 0, 0]
+                            ],
+                            "path": [[0, 0], [1, 0], [2, 0], [2, 1], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4]],
+                            "start": [0, 0],
+                            "destination": [4, 4]
+                        }
+                    })
+
                 # these dont do shit rn lol
                 case "sensor":
                     sensor(data)
-                case "stop":
-                    stop(data) # this is just "none" in move data so remove this
+
     except WebSocketDisconnect:
         print('[ws] Receive task stopped')
         raise
@@ -62,6 +82,13 @@ async def recieve(ws: WebSocket):
 async def send(ws: WebSocket):
     # waow cv2 instead so we dont have like 50 lines or something for image handling
     cap = cv2.VideoCapture(0)
+
+    # check if camera actually opened
+    if not cap.isOpened():
+        print("[ws] ERROR: Cannot open camera!")
+        return
+
+
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
     cap.set(cv2.CAP_PROP_FPS, 30)
@@ -69,6 +96,7 @@ async def send(ws: WebSocket):
 
     try:
         while True:
+            # send image frame
             ret, frame = await asyncio.to_thread(cap.read)
             if not ret:
                 break
@@ -77,6 +105,17 @@ async def send(ws: WebSocket):
             jpeg_bytes = buffer.tobytes()
 
             await ws.send_bytes(jpeg_bytes)
+
+            # check queue for other stuff to send
+            try:
+                data = send_queue.get_nowait()
+                await ws.send_json(data)
+            except asyncio.QueueEmpty:
+                pass
+
+            await asyncio.sleep(0.01)
+    except asyncio.CancelledError:
+        print('[ws] Send task cancelled')
     finally:
         cap.release()
 
