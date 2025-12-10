@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="6ac5ca60-ea7b-4a87-b97a-60e1c1e109f3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/h/0aa2c875120abd5d6a400cb389254646.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/h/c6b80e60916b99498f50dcf33634aaae.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/h/timestamp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/o/57e80182284bfd802027da96de430469/build" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/o/cfaf7a24095f5d89fc7e30798eca24da/dependencies.zig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/o/e53bb25ef83c37717776596a400c7609/build" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/o/f1ea4330472a4c6ebcbfed6922919020/dependencies.zig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/0de2bc7b8ecf843738d5e3b13139ce2e" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/2a5074cc90a74734ce6234472f881acb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/48ed3768f4919c52b533565dee6c8c9d" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/4b556838d54494f9285c43aee1b722a3" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/4ca5dab9a26385373133de46cc5aec51" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/4cbfcf23e781eacc3d2e6446b6aa8886" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/7f3d11bc5413bc62820f8e68fd29e0af" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/.zig-cache/z/ca57a15ef800a5f177134fd62821bb72" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/build.zig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/build.zig.zon" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/src/main.zig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/src/main.zig.old" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/UART/src/root.zig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/pathfinding/astar.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/websocket/handlers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/RPI5/src/websocket/server.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RPI5/path_reg/A*/a*.py" beforeDir="false" afterPath="$PROJECT_DIR$/RPI5/path_reg/A*/a*.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="36ea0VP63nJOE5MinyO8LLtjhj8" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/lucilorate/Development/uni-projects/aurora/Firmware",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-PY-252.26830.99" />
+        <option value="bundled-python-sdk-164cda30dcd9-0af03a5fa574-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26830.99" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="6ac5ca60-ea7b-4a87-b97a-60e1c1e109f3" name="Changes" comment="" />
+      <created>1765369267839</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1765369267839</updated>
+      <workItem from="1765369269087" duration="1924000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/websuck/CWS.py</url>
+          <line>1</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

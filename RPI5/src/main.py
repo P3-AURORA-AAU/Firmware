@@ -16,6 +16,9 @@ async def main(ws: WebSocket):
     await ws.accept()
     print('[ws] Client Connected')
 
+    if not visuals_handler.initialize():
+        print("[ws] Failed to initialize camera, ur gonna have to do this without video, good luck :pray:")
+
     # set rover up to send path update to ws send queue when the path updates
     async def send_path_update(data):
         await send_queue.put(data)
@@ -38,6 +41,7 @@ async def main(ws: WebSocket):
             task.cancel()
 
         await asyncio.gather(*pending, return_exceptions=True)
+        await asyncio.gather(*done, return_exceptions=True)
 
     except Exception as e:
         print(f'[ws] Error: {e}')
