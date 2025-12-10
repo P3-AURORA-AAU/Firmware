@@ -60,28 +60,6 @@ async def recieve(ws: WebSocket):
                     handle_move(data["data"])
                 case "change_speed":
                     handle_speed(data["data"])
-                    # test thing, remove ts
-
-                    await send_queue.put({
-                        "type": "path_data",
-                        "data": {
-                            "grid": [
-                                [0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
-                                [0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
-                                [1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
-                                [0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-                                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0],
-                                [0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-                                [1, 0, 0, 0, 0, 1, 0, 1, 0, 0],
-                                [0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
-                                [0, 1, 0, 0, 0, 0, 1, 0, 1, 0],
-                                [1, 0, 0, 1, 0, 1, 0, 0, 0, 0]
-                            ],
-                            "path": [[0, 0], [1, 0], [2, 0], [2, 1], [2, 2], [3, 2], [4, 2], [4, 3], [4, 4]],
-                            "start": [0, 0],
-                            "destination": [4, 4]
-                        }
-                    })
 
                 # these dont do shit rn lol
                 case "sensor":
