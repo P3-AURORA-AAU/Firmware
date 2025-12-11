@@ -23,6 +23,7 @@ class RoverState:
         self.on_path_update = None # call when path is updated, we set this in the main function so we can send stuff over ws
 
         # add other state stuff, we probably want more stuff than just pathfinding here
+        self.speed = "100%"
 
     # recalculate the path with a*
     def recalculate_path(self):
@@ -63,6 +64,10 @@ class RoverState:
         self.current_position = new_position
         self.recalculate_path()
         print(f"[State] Updated position: {self.current_position}")
+
+    def set_speed(self, speed):
+        self.speed = speed
+        print(f"[State] Set speed: {self.speed}")
 
     # update the grid, probably wont use this in the POC, but erm now its here ig
     def update_grid(self, new_grid):

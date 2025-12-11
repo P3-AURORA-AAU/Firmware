@@ -22,8 +22,6 @@ async def main(ws: WebSocket):
     if not visuals_handler.initialize_human_detection():
         print("[ws] Failed to initialize human detection, running without human detection")
 
-    visuals_handler.enable_human_detection()
-
     # set rover up to send path update to ws send queue when the path updates
     async def send_path_update(data):
         await send_queue.put(data)
@@ -32,6 +30,15 @@ async def main(ws: WebSocket):
 
     # initial path calculation
     rover_state.recalculate_path()
+
+    # send current rover state
+    await send_queue.put({
+        "type": "rover_status_data",
+        "data": {
+            "speed": rover_state.speed,
+            "human_detection": visuals_handler.human_detection_enabled
+        }
+    })
 
     one = asyncio.create_task(recieve(ws))
     two = asyncio.create_task(send(ws))
@@ -65,6 +72,12 @@ async def recieve(ws: WebSocket):
                     handle_move(data["data"])
                 case "change_speed":
                     handle_speed(data["data"])
+                case "enable_human_detection":
+                    is_enabled = data["data"]["enable"]
+                    if is_enabled:
+                        visuals_handler.enable_human_detection()
+                    else:
+                        visuals_handler.disable_human_detection()
 
                 # these dont do shit rn lol
                 case "sensor":
@@ -90,6 +103,7 @@ async def send(ws: WebSocket):
             try:
                 data = send_queue.get_nowait()
                 await ws.send_json(data)
+                print("[ws] Sent Data: ", data)
             except asyncio.QueueEmpty:
                 pass
 

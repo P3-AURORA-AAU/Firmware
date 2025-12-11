@@ -20,8 +20,7 @@ def handle_move(data):
 
 
 def handle_speed(data):
-    # "50%" | "100%"
-    print(f"Speed: {data}")
+    rover_state.set_speed(data["speed"])
 
 
 def handle_sensor(data):
