@@ -16,8 +16,13 @@ async def main(ws: WebSocket):
     await ws.accept()
     print('[ws] Client Connected')
 
-    if not visuals_handler.initialize():
+    if not visuals_handler.initialize_camera():
         print("[ws] Failed to initialize camera, ur gonna have to do this without video, good luck :pray:")
+
+    if not visuals_handler.initialize_human_detection():
+        print("[ws] Failed to initialize human detection, running without human detection")
+
+    visuals_handler.enable_human_detection()
 
     # set rover up to send path update to ws send queue when the path updates
     async def send_path_update(data):
