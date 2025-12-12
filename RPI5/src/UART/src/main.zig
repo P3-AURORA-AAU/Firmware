@@ -54,6 +54,7 @@ pub fn main() !void {
     };
     if (ok) {
         std.debug.print("Handshake successful!\n", .{});
+        try writeByte(fd, 0x07);
         try readValues(fd, &buffer_uart_input, 2_000_000); // 2-second timeout
     } else {
         std.debug.print("Handshake failed.\n", .{});
