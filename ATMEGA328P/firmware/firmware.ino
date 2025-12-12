@@ -35,6 +35,8 @@ const int DPDT_RIGHT = 18;
 const int DPDT_LEFT = 19; 
 
 
+
+
 struct Speed {
   int Left;
   int Right;
@@ -104,6 +106,21 @@ void BackwordsTurn(Speed speed) {
   MotorSpeed.Right = -speed.Right;
 }
 
+void sendSensorPacket(uint16_t acc_x, uint16_t acc_y, uint16_t acc_z, uint16_t gy_x, uint16_t gy_y, uint16_t gy_z, uint16_t temp, uint16_t moisture, uint16_t pressure) {
+    uint16_t values[9] = {
+        acc_x, acc_y, acc_z,
+        gy_x, gy_y, gy_z,
+        temp, moisture, pressure
+    };
+
+    for (int i = 0; i < 9; i++) {
+        uint8_t lo = values[i] & 0xFF;
+        uint8_t hi = values[i] >> 8;
+
+        Serial.write(lo);   // little-endian low byte first
+        Serial.write(hi);   // high byte second
+    }
+}
 void setDir(byte* cmd) {
   int angle = cmd[1];
   switch (angle) {
@@ -135,18 +152,25 @@ void sensorRequset(byte* cmd){
 switch (cmd[1]) {
     case 0x01:
       accData();
+      sendSensorPacket(acc_x,acc_y,acc_z,0,0,0,0,0,0);
       break;
     case 0x02:
       gyroData();
+      sendSensorPacket(0,0,0,gy_x,gy_y,gy_z,0,0,0);
       break;
     case 0x03:
-      MoistMeterData();
+      sendSensorPacket(0,0,0,0,0,0,0,MoistMeterData(),0);
       break;
     case 0x04:
-      tempData();
+      sendSensorPacket(0,0,0,0,0,0,tempData(),0,0);
       break;
     case 0x06:
-      pressureData();
+      sendSensorPacket(0,0,0,0,0,0,0,0,pressureData());
+      break;
+    case 0x07:
+      accData();
+      gyroData();
+      sendSensorPacket(acc_x,acc_y,acc_z,gy_x,gy_y,gy_z,tempData(),MoistMeterData(),pressureData());
       break;
     
     default:
