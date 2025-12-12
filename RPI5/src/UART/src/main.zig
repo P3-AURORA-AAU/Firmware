@@ -17,6 +17,7 @@ const UARTError = error{
 const syn: u8 = 0x53;
 const synAck: u8 = 0x54;
 const ack: u8 = 0x55;
+var buffer_uart_input: [9]u16 = undefined; // {acceleration_x, acceleration_y, acceleration_z, gyro_x, gyro_y, gyro_z, temp, mouisture, presure}
 
 pub fn main() !void {
     const uart_path = "/dev/ttyAMA0";
@@ -53,6 +54,7 @@ pub fn main() !void {
     };
     if (ok) {
         std.debug.print("Handshake successful!\n", .{});
+        try readValues(fd, &buffer_uart_input, 2_000_000); // 2-second timeout
     } else {
         std.debug.print("Handshake failed.\n", .{});
     }
@@ -92,6 +94,47 @@ fn readByte(fd: c_int, timeout_us: i32) UARTError!u8 {
     }
     return buf[0];
 }
+fn readValues(fd: c_int, out: []u16, timeout_us: i32) UARTError!void {
+    // Each value is 2 bytes → need a temp buffer
+    var raw: [2]u8 = undefined;
+
+    for (out, 0..) |*value, i| {
+        // Read exactly 2 bytes for each value
+        var read_count: usize = 0;
+
+        while (read_count < 2) {
+            var pfd: c.struct_pollfd = .{
+                .fd = fd,
+                .events = c.POLLIN,
+                .revents = 0,
+            };
+
+            const timeout_ms = @divFloor(timeout_us, 1000);
+            const nready = c.poll(&pfd, 1, timeout_ms);
+
+            if (nready < 0) return UARTError.IoError;
+            if (nready == 0) return UARTError.Timeout;
+
+            const n = c.read(fd, raw.ptr + read_count, 2 - read_count);
+
+            if (n < 0) return UARTError.IoError;
+            if (n == 0) return UARTError.IoError;
+
+            read_count += @intCast(usize, n);
+        }
+
+        // Convert 2 bytes → little-endian u16
+        const lo = raw[0];
+        const hi = raw[1];
+        value.* = @as(u16, lo) | (@as(u16, hi) << 8);
+
+        // Safety: enforce 0–1023 range
+        if (value.* > 1023)
+            return UARTError.UnexpectedResponse;
+    }
+}
+
+
 
 fn handshake(fd: c_int, timeout_us: i32) UARTError!bool {
     std.debug.print("Starting handshake", .{});
