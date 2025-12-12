@@ -1,9 +1,7 @@
 #CentralWebSocket
 import asyncio
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-import cv2
 from handlers import handle_move, handle_speed, handle_sensor
-from pathfinding.a_star import a_star_search
 from state import rover_state
 from visual.visuals_handler import visuals_handler
 
