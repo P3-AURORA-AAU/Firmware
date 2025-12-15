@@ -106,7 +106,15 @@ async def send(ws: WebSocket):
                 pass
 
             await asyncio.sleep(0.01)
+
     except asyncio.CancelledError:
         print('[ws] Send task cancelled')
+        raise
+    except WebSocketDisconnect:
+        print('[ws] Send connection lost')
+        raise
+    except Exception as e:
+        print(f'[ws] Send error: {e}')
+        raise 
     finally:
         visuals_handler.cap.release()
