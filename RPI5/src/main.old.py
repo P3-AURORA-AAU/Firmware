@@ -1,15 +1,16 @@
 #CentralWebSocket
 import asyncio
-
-import cv2
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import cv2
 from handlers import handle_move, handle_speed, handle_sensor
+from pathfinding.a_star import a_star_search
 from state import rover_state
 from visual.visuals_handler import visuals_handler
-from queues import queues
 
 
 app = FastAPI()
+
+send_queue = asyncio.Queue()
 
 @app.websocket("/ws")
 async def main(ws: WebSocket):
@@ -24,7 +25,7 @@ async def main(ws: WebSocket):
 
     # set rover up to send path update to ws send queue when the path updates
     async def send_path_update(data):
-        await queues.send_queue.put(data)
+        await send_queue.put(data)
 
     rover_state.on_path_update = send_path_update
 
@@ -32,7 +33,7 @@ async def main(ws: WebSocket):
     rover_state.recalculate_path()
 
     # send current rover state
-    await queues.send_queue.put({
+    await send_queue.put({
         "type": "rover_status_data",
         "data": {
             "speed": rover_state.speed,
@@ -94,98 +95,24 @@ async def recieve(ws: WebSocket):
 async def send(ws: WebSocket):
     try:
         while True:
-            try:
-                camera_frame = queues.camera_queue.get_nowait()
-                if visuals_handler.human_detection_enabled:
-                    camera_frame = visuals_handler.run_human_detection(camera_frame)
-
-                _, buffer = cv2.imencode('.jpg', camera_frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
-                await ws.send_bytes(buffer.tobytes())
-            except asyncio.QueueEmpty:
-                pass
+            if visuals_handler.camera_active:
+                jpeg_bytes = await visuals_handler.generate_frame()
+                if jpeg_bytes:
+                    await ws.send_bytes(jpeg_bytes)
 
             # check queue for other stuff to send
             try:
-                data = queues.send_queue.get_nowait()
+                data = send_queue.get_nowait()
                 await ws.send_json(data)
                 print("[ws] Sent Data: ", data)
             except asyncio.QueueEmpty:
                 pass
 
             await asyncio.sleep(0.01)
-
     except asyncio.CancelledError:
         print('[ws] Send task cancelled')
-        raise
-    except WebSocketDisconnect:
-        print('[ws] Send connection lost')
-        raise
-    except Exception as e:
-        print(f'[ws] Send error: {e}')
-        raise 
     finally:
         visuals_handler.cap.release()
 
 
-# ------------ Jetbot stuff -------------------
-
-@app.websocket("/jetbot")
-async def jetbot_endpoint(ws: WebSocket):
-    await ws.accept()
-    print('[ws] JetBot Connected')
-
-    one = asyncio.create_task(recieve_jetbot(ws))
-
-    try:
-        done, pending = await asyncio.wait(
-            [one],
-            return_when=asyncio.FIRST_COMPLETED
-        )
-
-        for task in pending:
-            task.cancel()
-
-        await asyncio.gather(*pending, return_exceptions=True)
-        await asyncio.gather(*done, return_exceptions=True)
-
-    except Exception as e:
-        print(f'[ws] Error: {e}')
-    finally:
-        print('[ws] Cleaning up')
-
-
-async def recieve_jetbot(ws: WebSocket):
-    try:
-        while True:
-            data = await ws.receive()
-            if type(data) == bytes:
-                queues.camera_queue.put_nowait(data)
-
-            match data["type"]:
-               case "idk":
-                   pass
-
-    except WebSocketDisconnect:
-        print('[ws] Receive task stopped')
-        raise
-
-    except Exception as e:
-        print(f'[ws] Receive error: {e}')
-        raise
-
-
-async def send_jetbot(ws: WebSocket):
-    try:
-        while True:
-            data = queues.jetbot_send_queue.get()
-            await ws.send_json(data)
-
-    except asyncio.CancelledError:
-        print('[ws] Send task cancelled')
-        raise
-    except WebSocketDisconnect:
-        print('[ws] Send connection lost')
-        raise
-    except Exception as e:
-        print(f'[ws] Send error: {e}')
-        raise
+# ------------
