@@ -18,6 +18,19 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+# =============================================================================
+# MODIFIED BY: VoxVoltera
+# DATE: 2026-02-03
+#
+# Academic modifications:
+#   - Forced Jetson Nano DTB selection
+#   - Disabled strict board detection
+#   - Replaced fatal errors with deterministic fallbacks
+#
+# For research and experimental use only.
+# =============================================================================
+
+
 hdr40_pingroup_pins = {
     'uartb-cts/rts' : (
         'uart2_rts_pg2',
