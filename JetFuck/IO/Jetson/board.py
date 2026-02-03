@@ -78,9 +78,10 @@ def _board_get(compat):
         board = os.path.splitext(os.path.basename(fn))[0]
         if board in compat:
             return board
-    raise RuntimeError("No board data found!")
-
-
+    # --- forced nano b00 board ---
+    board_file = '/opt/nvidia/jetson-io/Jetson/boards/p3449-0000-b00+p3448-0000-b00.board'
+    if not os.path.exists(board_file):
+        raise RuntimeError('Forced board file missing: %s' % board_file)
 def _board_get_dtb(compat, model, path):
     dtbs = dtc.find_compatible_dtb_files(compat, model, path)
 

@@ -101,17 +101,22 @@ def find_nodes_with_prop(dtb, node, prop):
     return match
 
 
+# ------------------------------------------------------------------
+# HARD-FORCED DTB SELECTION (OPTION A + ABSOLUTE FALLBACK)
+# ------------------------------------------------------------------
 def find_compatible_dtb_files(compat, model, path):
-    dtbs = []
-    for dtb in glob.glob(os.path.join(path, '*.dtb')):
-        if compat != get_compatible(dtb):
-            continue
-        if model != get_model(dtb):
-            continue
-        dtbs.append(dtb)
-    if not dtbs:
-        return None
-    return dtbs
+    """
+    Force Jetson Nano devkit b00 DTB and ignore compat/model.
+    This makes Jetson-IO stop failing board detection on images where
+    the running DT reports only generic compatible strings.
+    """
+    forced = os.path.join(path, 'kernel_tegra210-p3448-0000-p3449-0000-b00.dtb')
+    if os.path.exists(forced):
+        return [forced]
+
+    # Fallback: return any DTB present
+    dtbs = sorted(glob.glob(os.path.join(path, '*.dtb')))
+    return dtbs if dtbs else None
 
 
 def find_compatible_dtbo_files(compat, path):

@@ -1,3 +1,6 @@
+# --- patched: ignore i2c eeprom failures ---
+IGNORE_EEPROM_ERRORS = True
+
 # Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
