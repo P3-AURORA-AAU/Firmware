@@ -1,0 +1,2 @@
+IMAGE = 'snap.jpg'
+
