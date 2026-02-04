@@ -4,7 +4,6 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import cv2
 
 app = FastAPI()
-
 send_queue = asyncio.Queue()
 
 @app.websocket("/ws")
