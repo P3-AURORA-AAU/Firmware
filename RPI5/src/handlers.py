@@ -21,7 +21,7 @@ def handle_move(data):
     print(f"Move: {data['direction']}")
 
     # simulate movement for testing
-    curr = rover_state.current_position
+    #curr = rover_state.current_position
 
     #match data["direction"]:
     #    case "forward":
@@ -34,7 +34,7 @@ def handle_move(data):
     #        rover_state.update_position([curr[0], curr[1] + 1])
 
     direction = data.get("direction")
-    
+    """
     if direction == "forward":
         rover_state.update_position([curr[0] - 1, curr[1]])
     
@@ -49,7 +49,7 @@ def handle_move(data):
     
     else:
         print(f"[rover] Unknown direction: {direction}")
-    
+    """
     send_movement_command_blocking(direction)
 
 
