@@ -39,4 +39,4 @@ class PositionTracker:
         grid_x = int(self.position[0] / self.grid_scale)
         grid_y = int(self.position[1] / self.grid_scale)
 
-        return [grid_x, grid_y]
+        return [grid_x, grid_y, orientation]
