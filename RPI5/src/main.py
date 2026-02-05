@@ -4,7 +4,7 @@ import asyncio
 from functools import partial
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from handlers import handle_move, handle_sensor
+from handlers import handle_move, handle_sensor, send_movement_command_blocking
 from state import rover_state
 from visual.visuals_handler import visuals_handler
 from queues import queues
@@ -19,15 +19,6 @@ CAMERA_WS_URL = "ws://10.42.7.85:8765"  # Camera WebSocket stream
 IMU_URL = "http://10.42.7.85:5000/imu/collect"  # IMU endpoint (your code uses POST)
 MOVEMENT_URL = "http://10.42.7.85:5000/move"  # POST movement
 
-MOVE_ACTIONS = {
-    "stop": "stop",
-    "forward": "forward",
-    "backward": "backward",
-    "left": "left",
-    "right": "right",
-    "moving_left": "moving_left",
-    "moving_right": "moving_right",
-}
 
 app = FastAPI()
 
@@ -92,18 +83,6 @@ async def startup_event():
 # ----------------------------
 # Movement POST function
 # ----------------------------
-def send_movement_command_blocking(action: str):
-    if action not in MOVE_ACTIONS:
-        print(f"[Movement] Invalid action: {action}")
-        return
-
-    url = f"{MOVEMENT_URL}/{action}"  # POST /move/<action>
-    try:
-        response = requests.post(url, timeout=1)
-        response.raise_for_status()
-        print(f"[Movement] Sent action '{action}', response: {response.text}")
-    except Exception as e:
-        print(f"[Movement] Failed to send action '{action}': {e}")
 
 
 async def send_movement_command(action: str):
@@ -209,7 +188,8 @@ async def send(ws: WebSocket):
         while True:
             # Camera frames
             try:
-                jpeg_bytes = queues.camera_queue.get_nowait()
+                while not queues.camera_queue.empty():
+                    jpeg_bytes = queues.camera_queue.get_nowait()
                 if visuals_handler.human_detection_enabled:
                     jpeg_bytes = await visuals_handler.run_human_detection_on_jpeg(jpeg_bytes)
                 await ws.send_bytes(jpeg_bytes)
@@ -235,4 +215,5 @@ async def send(ws: WebSocket):
     except Exception as e:
         print(f"[ws] Send error: {e}")
         raise
+
 

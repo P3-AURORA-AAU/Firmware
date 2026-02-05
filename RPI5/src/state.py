@@ -61,13 +61,20 @@ class RoverState:
 
     # update rover position
     def update_position(self, new_position):
+        if new_position[0] < 0 or new_position[1] < 0:
+            print(f"[State] Did not update position as that position is illegal!: {new_position}")
+            return
+        if new_position[0] > len(self.obj_grid) or new_position[1] > len(self.obj_grid[0]):
+            print(f"[State] Did not update position as that position is illegal!: {new_position}")
+            return
         self.current_position = new_position
         self.recalculate_path()
         print(f"[State] Updated position: {self.current_position}")
-
+    
     def set_speed(self, speed):
         self.speed = speed
         print(f"[State] Set speed: {self.speed}")
+
 
     # update the grid, probably wont use this in the POC, but erm now its here ig
     def update_grid(self, new_grid):
