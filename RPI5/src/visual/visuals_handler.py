@@ -23,6 +23,13 @@ class VisualsHandler:
         self.model = None
         self.human_detection_enabled = False
 
+        # --- RPi4-friendly knobs ---
+        self.imgsz = 416               # 640 -> 416 is a big speedup on Pi4
+        self.jpeg_quality = 50         # reduce CPU and bandwidth
+        self.conf_thres = 0.35
+        self.iou_thres = 0.50
+        self.max_det = 20
+
     # ----------------------------
     # Load YOLO model
     # ----------------------------
@@ -54,6 +61,29 @@ class VisualsHandler:
         print("[visuals] Human detection disabled")
 
     # ----------------------------
+    # Fast box drawing (replaces results[0].plot())
+    # ----------------------------
+    def _draw_person_boxes(self, frame, result):
+        boxes = getattr(result, "boxes", None)
+        if boxes is None or len(boxes) == 0:
+            return frame
+
+        xyxy = boxes.xyxy
+        cls = boxes.cls
+        conf = boxes.conf
+
+        for i in range(len(xyxy)):
+            if int(cls[i]) != 0:
+                continue
+            if float(conf[i]) < self.conf_thres:
+                continue
+
+            x1, y1, x2, y2 = map(int, xyxy[i].tolist())
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        return frame
+
+    # ----------------------------
     # Run YOLO detection on a single OpenCV frame
     # ----------------------------
     async def run_human_detection(self, frame):
@@ -65,15 +95,18 @@ class VisualsHandler:
             return frame
 
         try:
-            # Run YOLO in a separate thread to avoid blocking asyncio (Py3.8 compatible)
+            # Run predict in a separate thread to avoid blocking asyncio (Py3.8 compatible)
             results = await to_thread_compat(
-                self.model,
+                self.model.predict,
                 source=frame,
-                imgsz=640,
+                imgsz=self.imgsz,
+                classes=[0],           # person only (COCO class 0)
+                conf=self.conf_thres,
+                iou=self.iou_thres,
+                max_det=self.max_det,
                 verbose=False,
             )
-            annotated_frame = results[0].plot()
-            return annotated_frame
+            return self._draw_person_boxes(frame, results[0])
         except Exception as e:
             print(f"[visuals] Human detection error: {e}")
             return frame
@@ -95,7 +128,14 @@ class VisualsHandler:
             if self.human_detection_enabled:
                 frame = await self.run_human_detection(frame)
 
-            ok, buffer = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 60])
+            ok, buffer = cv2.imencode(
+                ".jpg",
+                frame,
+                [
+                    cv2.IMWRITE_JPEG_QUALITY, int(self.jpeg_quality),
+                    cv2.IMWRITE_JPEG_OPTIMIZE, 1,
+                ],
+            )
             if not ok:
                 return None
             return buffer.tobytes()
@@ -106,4 +146,3 @@ class VisualsHandler:
 
 # Instantiate a singleton for import
 visuals_handler = VisualsHandler()
-
