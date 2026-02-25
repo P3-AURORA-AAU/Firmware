@@ -15,8 +15,8 @@ class Cell:
 
 # Define the size of the grid
 #grid field is 0.6x0.6m, gridsize is to be updated in accordance to CPH ACM (15) 0.090B
-ROW = 8
-COL = 15
+ROW = 22
+COL = 20
 #dim = 4.8m * 9m
 
 # Check if a cell is valid (within the grid)

@@ -1,4 +1,4 @@
-from state import rover_state
+from state import RoverState
 
 # TODO: make ts actually do stuff
 def handle_move(data):
@@ -6,31 +6,31 @@ def handle_move(data):
     print(f"Move: {data['direction']}")
     send_movement_command_blocking(data.get('direction'))
     # simulate movement for testing
-    curr = rover_state.current_position
+    curr = RoverState.current_position
 
     #match data["direction"]:
     #    case "forward":
-    #        rover_state.update_position([curr[0] - 1, curr[1]])
+    #        RoverState.update_position([curr[0] - 1, curr[1]])
     #    case "backwards":
-    #        rover_state.update_position([curr[0] + 1, curr[1]])
+    #        RoverState.update_position([curr[0] + 1, curr[1]])
     #    case "left":
-    #        rover_state.update_position([curr[0], curr[1] - 1])
+    #        RoverState.update_position([curr[0], curr[1] - 1])
     #    case "right":
-    #        rover_state.update_position([curr[0], curr[1] + 1])
+    #        RoverState.update_position([curr[0], curr[1] + 1])
 
     direction = data.get("direction")
     
     if direction == "forward":
-        rover_state.update_position([curr[0] - 1, curr[1]])
+        RoverState.update_position([curr[0] - 1, curr[1]])
     
     elif direction == "backwards":
-        rover_state.update_position([curr[0] + 1, curr[1]])
+        RoverState.update_position([curr[0] + 1, curr[1]])
     
     elif direction == "left":
-        rover_state.update_position([curr[0], curr[1] - 1])
+        RoverState.update_position([curr[0], curr[1] - 1])
     
     elif direction == "right":
-        rover_state.update_position([curr[0], curr[1] + 1])
+        RoverState.update_position([curr[0], curr[1] + 1])
     
     else:
         print(f"[rover] Unknown direction: {direction}")
@@ -38,7 +38,7 @@ def handle_move(data):
 
 
 def handle_speed(data):
-    rover_state.set_speed(data["speed"])
+    RoverState.set_speed(data["speed"])
 
 
 def handle_sensor(data):

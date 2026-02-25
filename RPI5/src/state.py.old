@@ -10,7 +10,7 @@ from position_tracker import PositionTracker
 MOVE_ACTIONS = {
     "none": "stop",
     "forward": "forward",
-    "backwards": "backwards",  # keep as-is (per your endpoint)
+    "backwards": "backward",
     "left": "left",
     "right": "right",
 }
@@ -26,9 +26,7 @@ def send_movement_command_blocking(action: str):
         print(f"[Movement] Invalid action: {action}")
         return
 
-    # IMPORTANT: keep endpoint as action (your API expects /backwards)
     url = f"{MOVEMENT_URL}/{action}"  # POST /move/<action>
-
     try:
         response = requests.post(url, timeout=1)
         response.raise_for_status()
@@ -50,44 +48,29 @@ async def send_drive_cmd(action: str):
 class rover_state:
     def __init__(self):
         # Grid (0=free, 1=obstacle)
-        self.obj_grid =[
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1],
-            [0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1],
-            [0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
-            [0,0,1,1,1,1,0,0,0,1,1,1,0,0,0,0,0,0,1,1],
-            [0,0,1,1,1,1,0,0,0,1,1,1,0,0,1,1,1,1,1,1],
-            [0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,1,1,1,1],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-            ]
-
+        self.obj_grid = [
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ]
 
         # Current and destination
         self.current_position = [0, 0]  # [row, col]
-        self.destination = [21, 19]
+        self.destination = [7, 14]
         self.current_path = None
         self.obj_threshold = 0
 
-        # Tracker: y=row, x=col
+        # Tracker: (x=col, y=row)
         self.tracker = PositionTracker(0, 0, "right")
 
         # Callbacks
-        self.on_drive_cmd = None      # async callback for movement sending
-        self.on_path_update = None    # async callback for path updates
+        self.on_drive_cmd = None  # Optional async callback for movement
+        self.on_path_update = None  # Optional async callback for path updates
 
         # Autonomous loop
         self.running = False
@@ -134,34 +117,6 @@ class rover_state:
     def stop_autonomous(self):
         self.running = False
 
-    def update_position(self, position):
-        rev_dir = {
-            (-1, 0): "up",
-            (1, 0): "down",
-            (0, -1): "left",
-            (0, 1): "right",
-        }
-        """
-        position is [row, col]
-        tracker.y = row, tracker.x = col
-        """
-        row, col = position
-
-        dx = col - self.tracker.x
-        dy = row - self.tracker.y 
-    
-        # Keep tracker consistent with your convention
-        self.tracker.y = row
-        self.tracker.x = col
-        
-        print(rev_dir[(dy, dx)])
-        self.tracker.change_direction(rev_dir[(dy, dx)])
-    
-        # Keep pathfinder start consistent too
-        self.current_position = [row, col]
-    
-        self.recalculate_path()
-    
     async def _drive_loop(self):
         while self.running:
             if not self.current_path:
@@ -174,14 +129,12 @@ class rover_state:
                 self.running = False
                 return
 
-            # Current tracker cell as [row, col]
+            # Get current path index and next cell
             cur = [self.tracker.y, self.tracker.x]
-
             try:
-                i = self.current_path.index(tuple(cur))  # current_path stores tuples
+                i = self.current_path.index(cur)
                 nxt = self.current_path[i + 1]
             except (ValueError, IndexError):
-                # Fallback: if we're not exactly on the path, aim at nearest next step
                 nxt = self.current_path[0]
 
             nr, nc = nxt
@@ -202,42 +155,38 @@ class rover_state:
             desired_index = self.direction_order.index(desired)
             delta = (desired_index - current_index) % 4
 
-            # Turning / movement decision
             if delta == 0:
+                # Already facing correct direction → move forward
                 move_action = "forward"
             elif delta == 2:
+                # Opposite direction → move backward
                 move_action = "backwards"
             elif delta == 1:
-                # Turn right once, then forward
+                # Turn right
+                await send_drive_cmd("right")
+                self.tracker.change_direction(desired)
                 if self.on_drive_cmd:
                     await self.on_drive_cmd("right")
-                self.tracker.change_direction(desired)
                 move_action = "forward"
             else:  # delta == 3
-                # Turn left once, then forward
+                # Turn left
+                await send_drive_cmd("left")
+                self.tracker.change_direction(desired)
                 if self.on_drive_cmd:
                     await self.on_drive_cmd("left")
-                self.tracker.change_direction(desired)
                 move_action = "forward"
 
-            # Update tracker position locally
+            # Move
             if move_action == "forward":
                 self.tracker.move()
-            else:
+            else:  # backward
                 self.tracker.move_back()
 
-            # Send movement command ONCE (via callback)
+            await send_drive_cmd(move_action)
+            self.current_position = [self.tracker.y, self.tracker.x]
             if self.on_drive_cmd:
                 await self.on_drive_cmd(move_action)
 
-            # Update state position
-            self.current_position = [self.tracker.y, self.tracker.x]
-            
-            self.recalculate_path()
             await asyncio.sleep(self.dt)
 
-
-
-
 RoverState = rover_state()
-

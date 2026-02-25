@@ -1,5 +1,3 @@
-# position_tracker.py
-
 class PositionTracker:
     # grid directions: (dr, dc)
     directions = {
@@ -12,22 +10,19 @@ class PositionTracker:
     def __init__(self, row, col, direction):
         if direction not in self.directions:
             raise ValueError(f"Invalid direction: {direction}")
-
-        # Keep this consistent everywhere:
-        # y = row, x = col
-        self.y = row
-        self.x = col
+        self.x = row
+        self.y = col
         self.direction = direction
 
     def move(self):
         dr, dc = self.directions[self.direction]
-        self.y += dr
-        self.x += dc
+        self.x += dr
+        self.y += dc
 
     def move_back(self):
         dr, dc = self.directions[self.direction]
-        self.y -= dr
-        self.x -= dc
+        self.x -= dr
+        self.y -= dc
 
     def change_direction(self, direction):
         if direction not in self.directions:
@@ -35,8 +30,7 @@ class PositionTracker:
         self.direction = direction
 
     def position(self):
-        return [self.y, self.x]
+        return [self.x, self.y]
 
     def __str__(self):
-        return f"pos = ({self.y},{self.x}), direction = {self.direction}"
-
+        return f"pos = ({self.x},{self.y}), direction = {self.direction}"
